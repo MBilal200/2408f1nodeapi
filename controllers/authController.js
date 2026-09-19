@@ -3,6 +3,7 @@
 
 import userModel from "../models/userModel.js"
 import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
 import { accessToken, refershToken } from "../services/tokenService.js"
 export const signup=async(req,res)=>{
     try {
@@ -47,6 +48,21 @@ export const login=async(req,res)=>{
 
     } catch (error) {
         res.status(400).json({msg:"user not found",error:error})
+    }
+}
+export const refresh=async(req,res)=>{
+    try {
+        const ref=req.cookies.reftoken
+       const match= jwt.verify(ref,process.env.REFRESH_SECRET)
+       if(!match){
+        return res.status(400).json({msg:"invalid token"})
+       }
+      const acc= jwt.sign({id:match.id,email:match.email},process.env.ACCESS_SECRET,{expiresIn:"15m"})
+
+      res.status(200).json({msg:"new access token generated",accesstoken:acc})
+
+    } catch (error) {
+        res.status(400).json({msg:"cookie error"})
     }
 }
 export const logout=async(req,res)=>{
